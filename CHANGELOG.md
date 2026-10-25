@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.3.2] - 2026-10-25
+
+### Added
+- Secure `web_fetch` tool for allowlisted HTTPS webpages.
+- DNS validation and pinned resolver to restrict network access.
+- HTML text extraction with response-size limits.
+- Server-generated provenance for retrieved webpages.
+- Automated tests for web fetch and orchestrator integration.
+
+### Verified
+- 16 automated tests passing.
+- Real HTTPS retrieval.
+- `web_search` followed by `web_fetch`.
+- OpenAI-compatible SSE responses in DEV.
+- End-to-end LibreChat production validation with `yifi:4b`.
+
+### Known limitations
+- Web fetching remains restricted to approved domains.
+- Retrieved content is untrusted and is not independent fact verification.
+- Streaming SSE is not yet token-by-token.
+- Generated answers can include unsupported metadata.
+
 Notable changes to the **YIFI-specific router** are documented here. This is not the LibreChat or Ollama upstream changelog.
 
 ## [v0.3.1] — 2026-10-24

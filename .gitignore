@@ -61,3 +61,4 @@ results_final_*/
 
 # Docker local overrides
 docker-compose.override.yml
+*.bak-*
