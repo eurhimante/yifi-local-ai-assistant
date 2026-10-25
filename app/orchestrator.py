@@ -6,16 +6,18 @@ import re
 import httpx
 from .tools.web_search import WEB_TOOL_SPEC, web_search
 from .tools.github_releases import GITHUB_RELEASE_TOOL_SPEC, github_latest_release
+from .tools.web_fetch import WEB_FETCH_TOOL_SPEC, web_fetch
 
 logger = logging.getLogger("yifi.tools")
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://host.docker.internal:11434/v1").rstrip("/")
 YIFI_MODEL = "yifi:4b"
 MAX_TOOL_CALLS = 3
-TOOL_SPECS = [WEB_TOOL_SPEC, GITHUB_RELEASE_TOOL_SPEC]
+TOOL_SPECS = [WEB_TOOL_SPEC, GITHUB_RELEASE_TOOL_SPEC, WEB_FETCH_TOOL_SPEC]
 SYSTEM_RULES = (
     "You are YIFI. Answer in the user's language. For changing facts, use available tools. "
     "For the latest stable release of a GitHub project, call github_latest_release. "
     "A web_search result provides ONLY snippets; it is NOT proof that a page was visited. "
+    "web_fetch retrieves text from approved HTTPS pages; it does not independently verify claims. "
     "Only github_latest_release provides directly retrieved official GitHub release metadata. "
     "Never claim to have opened, read or manually verified a page unless an actual tool did so. "
     "Do not invent facts, dates, versions, tool use, or sources. "
@@ -112,6 +114,18 @@ async def complete(payload):
                     urls = [item.get("url") for item in result.get("results", []) if item.get("url")]
                     logger.info("tool=web_search success=%s results=%s", "error" not in result, len(urls))
                     evidence.append(f"- web_search: snippets only; {len(urls)} results (not opened)")
+                elif name == "web_fetch":
+                    used += 1
+                    result = await web_fetch(args)
+                    ok = "error" not in result
+                    logger.info("tool=web_fetch success=%s", ok)
+                    if ok:
+                        evidence.append(
+                            f"- web_fetch: page text retrieved from {result['url']} "
+                            "(content retrieved, claims not independently verified)"
+                        )
+                    else:
+                        evidence.append("- web_fetch: attempted; page not retrieved")
                 elif name == "github_latest_release":
                     used += 1
                     result = await github_latest_release(args)
